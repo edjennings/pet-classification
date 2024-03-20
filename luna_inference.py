@@ -37,7 +37,7 @@ with torch.no_grad():
         incorrects = np.nonzero(preds.reshape((-1,)) != labels)
         
         # add the incorrect predictions to a numpy array
-        incorrect_labels.append(preds[incorrects].cpu().numpy())
+        incorrect_labels.append(np.squeeze(preds[incorrects].cpu().numpy()))
         
         # undo the normalization required by the model and restore the original pixel values of the image
         normalized_incorrect_inputs = inputs[incorrects]
@@ -50,13 +50,20 @@ with torch.no_grad():
         # add the incorreclty labeled images with their original pixel values to a numpy array
         incorrect_images.append(unnormalized_incorrect_inputs.cpu().numpy())
 
+ 
 # print accuracy against test set to screen
+
 print(str((test_running_correct/len(test_loader.dataset))*100) + ' accuracy')
 
 # make a plot containing all incorrectly labeled images and their predictions
 # calculate number of rows necessary to display the incorrectly labeled images 
 
-total_incorrect = len(incorrect_labels[0][:])
+incorrect_labels_array = np.hstack(incorrect_labels)
+incorrect_images_array = np.concatenate(incorrect_images)
+
+
+total_incorrect = len(incorrect_labels_array)
+
 n_row = math.ceil(total_incorrect/4)
 n_col = 4
 
@@ -64,10 +71,11 @@ fig = plt.figure(figsize=(10, 10))
 
 for i in range(total_incorrect):
     fig.add_subplot(n_row, n_col, i + 1)
-    plt.imshow(incorrect_images[0][i][0][:][:][:].transpose(1,2,0))
-    if incorrect_labels[0][i][0] == 0:
+
+    plt.imshow(incorrect_images_array[i][0][:][:][:].transpose(1,2,0))
+    if incorrect_labels_array[i] == 0:
         plt.title('Prediction: Enzo')
-    elif  incorrect_labels[0][i][0] == 1:
+    elif  incorrect_labels_array[i] == 1:
         plt.title('Prediction: Luna')
     else:  
         plt.title('Prediction: Marvin')
